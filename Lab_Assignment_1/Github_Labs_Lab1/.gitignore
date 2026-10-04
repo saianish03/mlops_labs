@@ -1,0 +1,4 @@
+lab_01/
+__pycache__/
+.pytest_cache/
+*.xml
