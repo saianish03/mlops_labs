@@ -1,0 +1,47 @@
+name: Pytest
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+
+# Lab code lives in a subfolder of the repo, so run every step from there.
+defaults:
+  run:
+    working-directory: Lab_Assignment_1/Github_Labs_Lab1
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+
+      - name: Run tests and generate XML report
+        run: python -m pytest --junitxml=pytest-report.xml
+
+      - name: Upload test results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: test-results
+          path: Lab_Assignment_1/Github_Labs_Lab1/pytest-report.xml
+
+      - name: Notify on success
+        if: success()
+        run: echo "Tests passed successfully"
+
+      - name: Notify on failure
+        if: failure()
+        run: echo "Tests failed"
