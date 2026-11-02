@@ -2,6 +2,19 @@
 
 Airflow runs a pipeline every day. The pipeline trains 3 models at the same time, picks the best one, and keeps it **only if it is good enough and better than the model we already have**.
 
+## Original lab and what I changed
+
+Original lab: [Airflow Labs - Lab 1](https://github.com/raminmohammadi/MLOps/tree/main/Labs/Airflow_Labs/Lab_1)
+
+| Part | Original | Mine |
+|---|---|---|
+| Problem | K-Means clustering on credit card data | Retrain and promote a cancer classifier |
+| Data | 8,950-row CSV file | Built-in scikit-learn dataset, no CSV |
+| DAG | 4 tasks in a straight line, manual trigger | 9 tasks with parallel training, a branch, daily schedule, run settings and retries |
+| Code | `PythonOperator` and `lab.py` | TaskFlow (`@dag`, `@task`) and plain steps in `pipeline.py` |
+| Airflow config | 3,198-line `airflow.cfg`, `docker-compose.yaml` downloaded by hand | 9-line `airflow.cfg`, own `docker-compose.yaml` and `Dockerfile` |
+| Output | Model saved inside the code folder | `output/` folder with data, models, champion and report |
+
 ## What I built
 
 - **Data:** Breast cancer dataset from scikit-learn (569 patients, 30 numbers each). Comes with scikit-learn, no download needed.
@@ -99,16 +112,34 @@ Then use 8081 instead of 8080 everywhere below.
    ```
    docker compose up -d
    ```
-   Wait about 1 minute.
+   Wait about 1 minute. You should see all containers `Started` or `Healthy`:
+
+   ![docker compose up](screenshots/1_docker_compose_up.png)
+
 2. Open http://localhost:8080 (with the correct port number) in browser. No password needed.
+
+   ![Airflow home page](screenshots/2_airflow_dashboard.png)
+
 3. Find DAG **cancer_model_retraining**. Flip the switch to turn it on (it starts paused).
-4. Click the play button -> **Trigger**. A box shows the 3 settings. Change them or just press **Trigger**.
-5. Click the run to watch tasks turn green. Use the **Graph** tab to see the branch.
+4. Click the play button -> **Trigger**. A box shows the 3 settings. Change them or just press **Trigger**. The tasks start running:
+
+   ![DAG running](screenshots/3_dag_running.png)
+
+5. Click the run to watch tasks turn green. Use the **Graph** tab to see the branch. Here `promote` ran, so `skip_promotion` is pink (skipped):
+
+   ![Successful DAG run](screenshots/4_successful_dag_run.png)
+
 6. See the results in the `output/` folder on your machine:
    - `output/reports/latest_report.json` - scores, best model, promoted yes/no, and why
    - `output/champion/champion.joblib` - the model we keep
    - `output/champion/champion.json` - champion scores
    - `output/candidates/` - all 3 trained models
+
+   ![Output folder](screenshots/5_outputs_folder_files.png)
+
+   This is `latest_report.json`:
+
+   ![Report](screenshots/6_report_screenshot.png)
 
 Stop Airflow:
 ```
